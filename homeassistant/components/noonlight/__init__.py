@@ -63,24 +63,24 @@ async def async_setup(hass, config):
             _LOGGER.error("API token failed renewal, retrying in 3 min")
             check_api_token.fail_count += 1
             persistent_notification.create(
-                    hass,
-                    "Noonlight API token failed to renew {} time{}!\n"
-                    "Home Assistant will automatically attempt to renew the "
-                    "API token in 3 minutes.".format(
-                            check_api_token.fail_count,
-                            's' if check_api_token.fail_count > 1 else ''
-                            ),
-                    "Noonlight Token Renewal Failure",
-                    NOTIFICATION_TOKEN_UPDATE_FAILURE)
+                hass,
+                "Noonlight API token failed to renew {} time{}!\n"
+                "Home Assistant will automatically attempt to renew the "
+                "API token in 3 minutes.".format(
+                    check_api_token.fail_count,
+                    's' if check_api_token.fail_count > 1 else ''
+                    ),
+                "Noonlight Token Renewal Failure",
+                NOTIFICATION_TOKEN_UPDATE_FAILURE)
             next_check_interval = timedelta(minutes=3)
         else:
             if check_api_token.fail_count > 0:
                 persistent_notification.create(
-                        hass,
-                        "Noonlight API token has now been "
-                        "renewed successfully.",
-                        "Noonlight Token Renewal Success",
-                        NOTIFICATION_TOKEN_UPDATE_SUCCESS)
+                    hass,
+                    "Noonlight API token has now been "
+                    "renewed successfully.",
+                    "Noonlight Token Renewal Success",
+                    NOTIFICATION_TOKEN_UPDATE_SUCCESS)
             check_api_token.fail_count = 0
 
         async_track_point_in_utc_time(
@@ -101,8 +101,12 @@ async def async_setup(hass, config):
 
     return True
 
+
 class NoonlightException(HomeAssistantError):
+    """General exception for Noonlight Integration."""
+
     pass
+
 
 class NoonlightIntegration():
     """Integration for interacting with Noonlight from Home Assistant."""
@@ -114,8 +118,9 @@ class NoonlightIntegration():
         self._access_token_response = {}
         self._time_to_renew = timedelta(hours=2)
         self._websession = async_get_clientsession(self.hass)
-        self.client = nl.NoonlightClient(token=self.access_token, session=self._websession)
-        self.client._base_url = self.config[CONF_API_ENDPOINT]
+        self.client = nl.NoonlightClient(token=self.access_token,
+                                         session=self._websession)
+        self.client.set_base_url(self.config[CONF_API_ENDPOINT])
 
     @property
     def latitude(self):
@@ -143,16 +148,17 @@ class NoonlightIntegration():
 
     @property
     def access_token_expires_in(self):
-        """Returns the timedelta when the token expires."""
+        """Will return the timedelta when the token expires."""
         return self.access_token_expiry - dt_util.utcnow()
 
     @property
     def should_token_be_renewed(self):
-        """Returns true if the token needs to be renewed."""
+        """Will return true if the token needs to be renewed."""
         return self.access_token is None \
             or self.access_token_expires_in <= self._time_to_renew
 
     async def check_api_token(self, force_renew=False):
+        """Check if Noonlight API token needs renewal and renew if so."""
         _LOGGER.debug("Checking if token needs renewal, expires: {0:.1f}h"
                       .format(self.access_token_expires_in
                               .total_seconds() / 3600.0))
@@ -174,12 +180,12 @@ class NoonlightIntegration():
                     _LOGGER.debug("Token renewed, expires at {0} ({1:.1f}h)"
                                   .format(self.access_token_expiry,
                                           self.access_token_expires_in
-                                              .total_seconds()/3600.0))
+                                          .total_seconds()/3600.0))
                     self.hass.helpers.dispatcher.async_dispatcher_send(
                         EVENT_NOONLIGHT_TOKEN_REFRESHED)
                     return True
                 raise NoonlightException("unexpected token_response: {}"
-                                .format(token_response))
+                                         .format(token_response))
             except NoonlightException:
                 _LOGGER.exception("Failed to renew Noonlight token")
                 return False
