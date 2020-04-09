@@ -1,0 +1,7 @@
+{
+    "name": "Noonlight - Alarm Monitoring",
+    "render_readme": true,
+    "country": "US",
+    "domains": ["switch"],
+    "homeassistant": "0.96"
+}
