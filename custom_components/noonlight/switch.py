@@ -6,7 +6,10 @@ from datetime import timedelta
 from noonlight import NoonlightClient
 
 from homeassistant.components import persistent_notification
-from homeassistant.components.switch import SwitchDevice
+try:
+    from homeassistant.components.switch import SwitchDevice
+except ImportError:
+    from homeassistant.components.switch import SwitchEntity as SwitchDevice
 from homeassistant.helpers.event import async_track_time_interval
 
 from . import (DOMAIN, EVENT_NOONLIGHT_TOKEN_REFRESHED,
