@@ -7,9 +7,9 @@ from noonlight import NoonlightClient
 
 from homeassistant.components import persistent_notification
 try:
-    from homeassistant.components.switch import SwitchDevice
+    from homeassistant.components.switch import SwitchEntity
 except ImportError:
-    from homeassistant.components.switch import SwitchEntity as SwitchDevice
+    from homeassistant.components.switch import SwitchDevice as SwitchEntity
 from homeassistant.helpers.event import async_track_time_interval
 
 from . import (DOMAIN, EVENT_NOONLIGHT_TOKEN_REFRESHED,
@@ -37,7 +37,7 @@ async def async_setup_platform(
         EVENT_NOONLIGHT_TOKEN_REFRESHED, noonlight_token_refreshed)
 
 
-class NoonlightSwitch(SwitchDevice):
+class NoonlightSwitch(SwitchEntity):
     """Representation of a Noonlight alarm switch."""
 
     def __init__(self, noonlight_integration):
