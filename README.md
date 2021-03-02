@@ -12,7 +12,7 @@ Noonlight service is currently available in the United States.
 
 Noonlight connects to emergency 9-1-1 services in all 50 U.S. states. Backed by a UL-compliant alarm monitoring center and staffed 24/7 with live operators in the United States, Noonlight is standing by to send help to your home at a moment's notice.
 
-When integrated with Home Assistant, a **Noonlight Alarm** switch will appear in your list of entities. When the Noonlight Alarm switch is turned _on_, this will send an emergency signal to Noonlight. You will be contacted by text and voice at the phone number associated with your Noonlight account. If you confirm the emergency with the Noonlight operator, or if you're unable to respond, Noonlight will dispatch local emergency services to your home using the [longitude and latitude coordinates](https://www.home-assistant.io/docs/configuration/basic/#latitude) specified in your Home Assistant configuration.
+When integrated with Home Assistant, a **Noonlight Alarm** switch will appear in your list of entities. When the Noonlight Alarm switch is turned _on_, this will send an emergency signal to Noonlight. You will be contacted by text and voice at the phone number associated with your Noonlight account. If you confirm the emergency with the Noonlight operator, or if you're unable to respond, Noonlight will dispatch local emergency services to your home using the [longitude and latitude coordinates](https://www.home-assistant.io/docs/configuration/basic/#latitude) specified in your Home Assistant configurationusing version 1 of the noonlight API.  The code has been updated to also support the noonling version 2 API.  Should you configure the system for V2 the system will communicate the alarm location based on a street address.
 
 **False alarm?** No problem. Just tell the Noonlight operator your PIN when you are contacted and the alarm will be canceled. We're glad you're safe!
 
@@ -49,6 +49,57 @@ noonlight:
 * `secret`: A secret key associated with your id
 * `api_endpoint`: The Noonlight API endpoint used when creating an alarm
 * `token_endpoint`: The OAuth endpoint used to refresh your Noonlight auth token (hosted by [Konnected](https://konnected.io))
+
+**Note:** To utilize the noonlight V2 API you will need to modify the api_endpoint and add these additional tags
+
+```yaml
+# V2 API Example configuration.yaml entry
+noonlight:
+  id: NOONLIGHT_ID
+  secret: NOONLIGHT_SECRET
+  api_endpoint: https://api.noonlight.com/dispatch/v1
+  token_endpoint: https://noonlight.konnected.io/ha/token
+  line1: '222 State Street'
+  line2: 'apt 22'
+  city: 'Baltimore'
+  state: 'MD' 
+  zip: '21140' 
+  name: 'John Doe'
+  phone: '12552551234'
+  pin: '1234'
+  instructions: 'Initial alarm setup, please call so client can verify everything is working'
+```
+
+* `id`: A unique identifier assigned to you when you complete the [initial setup steps](#initial-set-up)
+* `secret`: A secret key associated with your id
+* `api_endpoint`: The Noonlight API endpoint used when creating an alarm
+* `token_endpoint`: The OAuth endpoint used to refresh your Noonlight auth token (hosted by [Konnected](https://konnected.io))
+* `line1`: Street Adress associated with the alarms
+* `line2`: This line is optional an is only required if you have a second line such as apartment number
+* `state`: 2 character uppercase state code for alarm address
+* `zip`: 5 character zip code for alarm addreess
+* `name`: Primary POC contact name
+* `phone`: Primary POC phone number
+* `pin`: Pin for disabling alarm
+* `instructions`: This line is optional and may be used to provide additional information with the generated alarms
+
+**Note:** The version 2 API also allows for two Home assistant input_text fields that can to be used to provide additional information 
+associated with the alarm message sent to Noonlight.  The fields are input_text.noonlight_service and input_text.alarm_cause. The expected values for
+input_text.noonlight_service are: police, fire and medical, which is provided as the emergency service in the alarm.  Text in the alarm_cause
+input_text is prepended to any instructions with "Alarm reason was XXXXX", where XXXXX is replaced with text from alarm_cause.  
+The expectation is that you set these values in your automation that handles your alarm causing event trigger.
+
+```yaml
+# V2 API Example configuration.yaml entries to establish the input_text fields
+input_text:
+  noonlight_service:
+    name: Noonlight Service Called
+    initial: police
+  alarm_cause:
+    name: Alarm Cause
+    initial: unknown
+```
+
 
 ## Automation Examples
 
