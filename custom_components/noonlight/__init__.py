@@ -29,6 +29,17 @@ TOKEN_CHECK_INTERVAL = timedelta(minutes=15)
 CONF_SECRET = 'secret'
 CONF_API_ENDPOINT = 'api_endpoint'
 CONF_TOKEN_ENDPOINT = 'token_endpoint'
+CONF_LINE1 = 'line1'
+CONF_LINE2 = 'line2'
+CONF_CITY = 'city'
+CONF_STATE = 'state'
+CONF_ZIP = 'zip'
+CONF_NAME = 'name'
+CONF_PHONE = 'phone'
+CONF_PIN = 'pin'
+CONF_INST = 'instructions'
+CONF_DEV_TOKEN = 'dev_token'
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +49,16 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_SECRET): cv.string,
         vol.Required(CONF_API_ENDPOINT): cv.string,
         vol.Required(CONF_TOKEN_ENDPOINT): cv.string,
+        vol.Optional(CONF_LINE1): cv.string,
+        vol.Optional(CONF_LINE2): cv.string,
+        vol.Optional(CONF_CITY): cv.string,
+        vol.Optional(CONF_STATE): cv.string,
+        vol.Optional(CONF_ZIP): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_PHONE): cv.string,
+        vol.Optional(CONF_PIN): cv.string,
+        vol.Optional(CONF_INST): cv.string,
+        vol.Optional(CONF_DEV_TOKEN): cv.string,
         vol.Inclusive(CONF_LATITUDE, 'coordinates',
                       'Include both latitude and longitude'): cv.latitude,
         vol.Inclusive(CONF_LONGITUDE, 'coordinates',
