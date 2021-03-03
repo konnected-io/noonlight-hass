@@ -85,7 +85,7 @@ noonlight:
 
 **Note:** The version 2 API also allows for two Home assistant input_text fields that can to be used to provide additional information 
 associated with the alarm message sent to Noonlight.  The fields are input_text.noonlight_service and input_text.alarm_cause. The expected values for
-input_text.noonlight_service are: police, fire and medical, which is provided as the emergency service in the alarm.  Text in the alarm_cause
+input_text.noonlight_service are: `police`, `fire` and `medical`, which is provided as the emergency service in the alarm.  Text in the alarm_cause
 input_text is prepended to any instructions with "Alarm reason was XXXXX", where XXXXX is replaced with text from alarm_cause.  
 The expectation is that you set these values in your automation that handles your alarm causing event trigger.
 
