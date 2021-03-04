@@ -6,7 +6,7 @@ import noonlight as nl
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_ID, CONF_LATITUDE, CONF_LONGITUDE, EVENT_HOMEASSISTANT_START)
+    CONF_ID, CONF_LATITUDE, CONF_LONGITUDE, ,CONF_PIN, EVENT_HOMEASSISTANT_START)
 from homeassistant.components import persistent_notification
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -36,7 +36,6 @@ CONF_STATE = 'state'
 CONF_ZIP = 'zip'
 CONF_NAME = 'name'
 CONF_PHONE = 'phone'
-CONF_PIN = 'pin'
 CONF_INST = 'instructions'
 CONF_DEV_TOKEN = 'dev_token'
 
