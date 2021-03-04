@@ -102,10 +102,6 @@ class NoonlightSwitch(SwitchEntity):
                         'pin': self.noonlight.config.get('pin')
                     }
 
-                    #try:
-                        #'instructions': { 'entry':self.noonlight.config.get('instructions') or "N/A"}
-                    #    body_param.update( {'instructions': { 'entry':self.hass.states.get('input_text.alarm_cause') or "N/A"}})
-                    #except TypeError:
                     _LOGGER.debug('Alarm cause . '
                                'reason: %s', self.hass.states.get('input_text.alarm_cause').state)
                     body_param.update( {'instructions': { 'entry': 'Alarm cause is ' + self.hass.states.get('input_text.alarm_cause').state+
