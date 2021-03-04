@@ -6,7 +6,7 @@ import noonlight as nl
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_ID, CONF_LATITUDE, CONF_LONGITUDE, ,CONF_PIN, EVENT_HOMEASSISTANT_START)
+    CONF_ID, CONF_LATITUDE, CONF_LONGITUDE, CONF_PIN, EVENT_HOMEASSISTANT_START)
 from homeassistant.components import persistent_notification
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
