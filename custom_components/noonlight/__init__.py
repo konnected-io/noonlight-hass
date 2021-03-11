@@ -141,6 +141,9 @@ class NoonlightIntegration():
         self.client = nl.NoonlightClient(token=self.access_token,
                                          session=self._websession)
         self.client.set_base_url(self.config[CONF_API_ENDPOINT])
+        self.hass.states.async_set('input_text.alarm_cause','unknown')
+        self.hass.states.async_set('input_text.noonlight_service','police')
+
 
     @property
     def latitude(self):
