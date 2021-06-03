@@ -6,7 +6,7 @@ import noonlight as nl
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_ID, CONF_LATITUDE, CONF_LONGITUDE, EVENT_HOMEASSISTANT_START)
+    CONF_ID, CONF_LATITUDE, CONF_LONGITUDE, CONF_PIN, EVENT_HOMEASSISTANT_START)
 from homeassistant.components import persistent_notification
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -29,6 +29,16 @@ TOKEN_CHECK_INTERVAL = timedelta(minutes=15)
 CONF_SECRET = 'secret'
 CONF_API_ENDPOINT = 'api_endpoint'
 CONF_TOKEN_ENDPOINT = 'token_endpoint'
+CONF_LINE1 = 'line1'
+CONF_LINE2 = 'line2'
+CONF_CITY = 'city'
+CONF_STATE = 'state'
+CONF_ZIP = 'zip'
+CONF_NAME = 'name'
+CONF_PHONE = 'phone'
+CONF_INST = 'instructions'
+CONF_DEV_TOKEN = 'dev_token'
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +48,16 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_SECRET): cv.string,
         vol.Required(CONF_API_ENDPOINT): cv.string,
         vol.Required(CONF_TOKEN_ENDPOINT): cv.string,
+        vol.Optional(CONF_LINE1): cv.string,
+        vol.Optional(CONF_LINE2): cv.string,
+        vol.Optional(CONF_CITY): cv.string,
+        vol.Optional(CONF_STATE): cv.string,
+        vol.Optional(CONF_ZIP): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_PHONE): cv.string,
+        vol.Optional(CONF_PIN): cv.string,
+        vol.Optional(CONF_INST): cv.string,
+        vol.Optional(CONF_DEV_TOKEN): cv.string,
         vol.Inclusive(CONF_LATITUDE, 'coordinates',
                       'Include both latitude and longitude'): cv.latitude,
         vol.Inclusive(CONF_LONGITUDE, 'coordinates',
@@ -121,6 +141,9 @@ class NoonlightIntegration():
         self.client = nl.NoonlightClient(token=self.access_token,
                                          session=self._websession)
         self.client.set_base_url(self.config[CONF_API_ENDPOINT])
+        self.hass.states.async_set('input_text.alarm_cause','unknown')
+        self.hass.states.async_set('input_text.noonlight_service','police')
+
 
     @property
     def latitude(self):
