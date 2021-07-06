@@ -3,22 +3,18 @@ import logging
 
 from datetime import timedelta
 
-from noonlight import NoonlightClient
-
 from homeassistant.components import persistent_notification
 try:
     from homeassistant.components.switch import SwitchEntity
 except ImportError:
     from homeassistant.components.switch import SwitchDevice as SwitchEntity
-from homeassistant.helpers.event import async_track_time_interval
 
 from . import (DOMAIN, EVENT_NOONLIGHT_TOKEN_REFRESHED,
+               EVENT_NOONLIGHT_ALARM_CANCELED,
+               EVENT_NOONLIGHT_ALARM_CREATED,
                NOTIFICATION_ALARM_CREATE_FAILURE)
 
 DEFAULT_NAME = 'Noonlight Switch'
-
-CONST_ALARM_STATUS_ACTIVE = 'ACTIVE'
-CONST_ALARM_STATUS_CANCELED = 'CANCELED'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,9 +28,23 @@ async def async_setup_platform(
 
     def noonlight_token_refreshed():
         noonlight_switch.schedule_update_ha_state()
+    
+    def noonlight_alarm_canceled():
+        noonlight_switch._state = False
+        noonlight_switch.schedule_update_ha_state()
+    
+    def noonlight_alarm_created():
+        noonlight_switch._state = True
+        noonlight_switch.schedule_update_ha_state()
 
     hass.helpers.dispatcher.async_dispatcher_connect(
         EVENT_NOONLIGHT_TOKEN_REFRESHED, noonlight_token_refreshed)
+
+    hass.helpers.dispatcher.async_dispatcher_connect(
+        EVENT_NOONLIGHT_ALARM_CANCELED, noonlight_alarm_canceled)
+
+    hass.helpers.dispatcher.async_dispatcher_connect(
+        EVENT_NOONLIGHT_ALARM_CREATED, noonlight_alarm_created)
 
 
 class NoonlightSwitch(SwitchEntity):
@@ -44,7 +54,6 @@ class NoonlightSwitch(SwitchEntity):
         """Initialize the Noonlight switch."""
         self.noonlight = noonlight_integration
         self._name = DEFAULT_NAME
-        self._alarm = None
         self._state = False
 
     @property
@@ -58,68 +67,29 @@ class NoonlightSwitch(SwitchEntity):
         return self.noonlight.access_token_expires_in.total_seconds() > 0
 
     @property
+    def extra_state_attributes(self):
+        """Return the current alarm attributes, when active."""
+        attr = {}
+        if self.noonlight._alarm is not None:
+            alarm = self.noonlight._alarm
+            attr['alarm_status'] = alarm.status
+            attr['alarm_id'] = alarm.id
+            attr['alarm_services'] = alarm.services
+        return attr
+
+    @property
     def is_on(self):
         """Return the status of the switch."""
         return self._state
 
-    async def update_alarm_status(self):
-        """Update the status of the current alarm."""
-        if self._alarm is not None:
-            return await self._alarm.get_status()
-
     async def async_turn_on(self, **kwargs):
-        """Activate an alarm."""
-        # [TODO] read list of monitored sensors, use sensor type to determine
-        #   whether medical, fire, or police should be notified
-        if self._alarm is None:
-            try:
-                self._alarm = await self.noonlight.client.create_alarm(
-                    body={
-                        'location.coordinates': {
-                            'lat': self.noonlight.latitude,
-                            'lng': self.noonlight.longitude,
-                            'accuracy': 5
-                        }
-                    }
-                )
-            except NoonlightClient.ClientError as client_error:
-                persistent_notification.create(
-                    self.hass,
-                    "Failed to send an alarm to Noonlight!\n\n"
-                    "({}: {})".format(type(client_error).__name__,
-                                      str(client_error)),
-                    "Noonlight Alarm Failure",
-                    NOTIFICATION_ALARM_CREATE_FAILURE)
-            if self._alarm and self._alarm.status == CONST_ALARM_STATUS_ACTIVE:
-                _LOGGER.debug(
-                    'noonlight alarm has been initiated. '
-                    'id: %s status: %s',
-                    self._alarm.id,
-                    self._alarm.status)
+        """Activate an alarm. Defaults to `police` services."""
+        if self.noonlight._alarm is None:
+            await self.noonlight.create_alarm()
+            if self.noonlight._alarm is not None:
                 self._state = True
-                cancel_interval = None
-
-                async def check_alarm_status_interval(now):
-                    _LOGGER.debug('checking alarm status...')
-                    if await self.update_alarm_status() == \
-                            CONST_ALARM_STATUS_CANCELED:
-                        _LOGGER.debug(
-                            'alarm %s has been canceled!',
-                            self._alarm.id)
-                        if cancel_interval is not None:
-                            cancel_interval()
-                        await self.async_turn_off()
-                        self.schedule_update_ha_state()
-                cancel_interval = async_track_time_interval(
-                    self.hass,
-                    check_alarm_status_interval,
-                    timedelta(seconds=15)
-                    )
 
     async def async_turn_off(self, **kwargs):
         """Turn off the switch if the active alarm is canceled."""
-        if self._alarm is not None:
-            if self._alarm.status == CONST_ALARM_STATUS_CANCELED:
-                self._alarm = None
-        if self._alarm is None:
+        if self.noonlight._alarm is None:
             self._state = False

@@ -12,13 +12,16 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.event import (
+    async_track_point_in_utc_time, async_track_time_interval)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.util.dt as dt_util
 
 DOMAIN = 'noonlight'
 
 EVENT_NOONLIGHT_TOKEN_REFRESHED = 'noonlight_token_refreshed'
+EVENT_NOONLIGHT_ALARM_CANCELED = 'noonlight_alarm_canceled'
+EVENT_NOONLIGHT_ALARM_CREATED = 'noonlight_alarm_created'
 
 NOTIFICATION_TOKEN_UPDATE_FAILURE = 'noonlight_token_update_failure'
 NOTIFICATION_TOKEN_UPDATE_SUCCESS = 'noonlight_token_update_success'
@@ -29,6 +32,15 @@ TOKEN_CHECK_INTERVAL = timedelta(minutes=15)
 CONF_SECRET = 'secret'
 CONF_API_ENDPOINT = 'api_endpoint'
 CONF_TOKEN_ENDPOINT = 'token_endpoint'
+
+CONST_ALARM_STATUS_ACTIVE = 'ACTIVE'
+CONST_ALARM_STATUS_CANCELED = 'CANCELED'
+CONST_NOONLIGHT_HA_SERVICE_CREATE_ALARM = 'create_alarm'
+CONST_NOONLIGHT_SERVICE_TYPES = (
+    nl.NOONLIGHT_SERVICES_POLICE,
+    nl.NOONLIGHT_SERVICES_FIRE,
+    nl.NOONLIGHT_SERVICES_MEDICAL
+    )
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +64,14 @@ async def async_setup(hass, config):
 
     noonlight_integration = NoonlightIntegration(hass, conf)
     hass.data[DOMAIN] = noonlight_integration
+
+    async def handle_create_alarm_service(call):
+        """Create a noonlight alarm from a service"""
+        service = call.data.get('service', None)
+        await noonlight_integration.create_alarm(alarm_types=[service])
+
+    hass.services.async_register(DOMAIN, 
+        CONST_NOONLIGHT_HA_SERVICE_CREATE_ALARM, handle_create_alarm_service)
 
     async def check_api_token(now):
         """Check if the current API token has expired and renew if so."""
@@ -116,6 +136,7 @@ class NoonlightIntegration():
         self.hass = hass
         self.config = conf
         self._access_token_response = {}
+        self._alarm = None
         self._time_to_renew = timedelta(hours=2)
         self._websession = async_get_clientsession(self.hass)
         self.client = nl.NoonlightClient(token=self.access_token,
@@ -177,6 +198,7 @@ class NoonlightIntegration():
                     token_response = await resp.json()
                 if 'token' in token_response and 'expires' in token_response:
                     self._set_token_response(token_response)
+                    _LOGGER.debug("Token set: {}".format(self.access_token))
                     _LOGGER.debug("Token renewed, expires at {0} ({1:.1f}h)"
                                   .format(self.access_token_expiry,
                                           self.access_token_expires_in
@@ -199,3 +221,67 @@ class NoonlightIntegration():
             token_response['expires'] = dt_util.utc_from_timestamp(0)
         self.client.set_token(token=token_response.get('token'))
         self._access_token_response = token_response
+
+    async def update_alarm_status(self):
+        """Update the status of the current alarm."""
+        if self._alarm is not None:
+            return await self._alarm.get_status()
+
+    async def create_alarm(self, alarm_types=[nl.NOONLIGHT_SERVICES_POLICE]):
+        """Create a new alarm"""
+        services = {}
+        for alarm_type in alarm_types or ():
+            if alarm_type in CONST_NOONLIGHT_SERVICE_TYPES:
+                services[alarm_type] = True
+        if self._alarm is None:
+            try:
+                alarm_body = {
+                    'location.coordinates': {
+                        'lat': self.latitude,
+                        'lng': self.longitude,
+                        'accuracy': 5
+                    }
+                }
+                if len(services) > 0:
+                    alarm_body['services'] = services
+                self._alarm = await self.client.create_alarm(
+                    body=alarm_body
+                )
+            except nl.NoonlightClient.ClientError as client_error:
+                persistent_notification.create(
+                    self.hass,
+                    "Failed to send an alarm to Noonlight!\n\n"
+                    "({}: {})".format(type(client_error).__name__,
+                                      str(client_error)),
+                    "Noonlight Alarm Failure",
+                    NOTIFICATION_ALARM_CREATE_FAILURE)
+            if self._alarm and self._alarm.status == CONST_ALARM_STATUS_ACTIVE:
+                self.hass.helpers.dispatcher.async_dispatcher_send(
+                    EVENT_NOONLIGHT_ALARM_CREATED)
+                _LOGGER.debug(
+                    'noonlight alarm has been initiated. '
+                    'id: %s status: %s',
+                    self._alarm.id,
+                    self._alarm.status)
+                cancel_interval = None
+
+                async def check_alarm_status_interval(now):
+                    _LOGGER.debug('checking alarm status...')
+                    if await self.update_alarm_status() == \
+                            CONST_ALARM_STATUS_CANCELED:
+                        _LOGGER.debug(
+                            'alarm %s has been canceled!',
+                            self._alarm.id)
+                        if cancel_interval is not None:
+                            cancel_interval()
+                        if self._alarm is not None:
+                            if self._alarm.status == \
+                                CONST_ALARM_STATUS_CANCELED:
+                                self._alarm = None
+                        self.hass.helpers.dispatcher.async_dispatcher_send(
+                            EVENT_NOONLIGHT_ALARM_CANCELED)
+                cancel_interval = async_track_time_interval(
+                    self.hass,
+                    check_alarm_status_interval,
+                    timedelta(seconds=15)
+                    )
