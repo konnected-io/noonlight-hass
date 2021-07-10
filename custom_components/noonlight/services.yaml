@@ -1,0 +1,16 @@
+create_alarm:
+  name: Create Alarm
+  description: Notifies Noonlight of an alarm with specific services.
+  fields:
+    service:
+      name: Service
+      description: Service that the alarm should call (police, fire, medical)
+      required: true
+      example: "police"
+      default: "police"
+      selector:
+        select:
+          options:
+            - "police"
+            - "fire"
+            - "medical"
