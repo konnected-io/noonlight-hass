@@ -24,7 +24,7 @@ Setup requires a U.S. based mobile phone number.
 
 1. Ensure that your [longitude and latitude coordinates](https://www.home-assistant.io/docs/configuration/basic/#latitude) are set accurately so that Noonlight knows where to send help.
 
-1. Click the link below to set up a Noonlight account and authorize Home Assistant to create alarms on your behalf:
+2. Click the link below to set up a Noonlight account and authorize Home Assistant to create alarms on your behalf:
     
     [Connect to Noonlight](https://noonlight.konnected.io/ha/auth)
 
@@ -67,6 +67,8 @@ noonlight:
   name: 'John Doe'
   phone: '12552551234'
   pin: '1234'
+  name2: 'John Doe home Cell'
+  phone2: '14104101234'
   instructions: 'Initial alarm setup, please call so client can verify everything is working'
 ```
 
@@ -81,7 +83,9 @@ noonlight:
 * `name`: Primary POC contact name
 * `phone`: Primary POC phone number
 * `pin`: Pin for disabling alarm
-* `instructions`: This line is optional and may be used to provide additional information with the generated alarms
+* `name2`: Optional secondary POC contact name
+* `phone2`: Optional secnodary POC phone number
+* `instructions`: This line is optional and may be used to provide additional information with the generated alarms however it doesn't appear the operators can see this information
 
 **Note:** The version 2 API also allows for two Home assistant input_text fields that can to be used to provide additional information 
 associated with the alarm message sent to Noonlight.  The fields are input_text.noonlight_service and input_text.alarm_cause. The expected values for

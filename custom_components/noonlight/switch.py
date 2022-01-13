@@ -118,7 +118,18 @@ class NoonlightSwitch(SwitchEntity):
                         body_param.update( {'services' : {'police' : True}} )
 
                     self._alarm = await self.noonlight.client.create_alarm(body=body_param)
-                        
+
+                    _LOGGER.debug( 'noonlight second name: %s',self.noonlight.config.get('name2'))
+                    if self.noonlight.config.get('name2') is not None: 
+                        _LOGGER.debug( 'Adding second contact %s to noonlight alarm id: %s',self.noonlight.config.get('name2'),self._alarm.id)
+                        #  Need to add secondary contact to generated alert 
+                        await self.noonlight.client._post("{url}/{id}/people".format(url=self.noonlight.client.alarms_url,id=self._alarm.id),
+  	                  data=[{
+                            'name': self.noonlight.config.get('name2'),
+                            'phone': self.noonlight.config.get('phone2'),
+                            'pin': self.noonlight.config.get('pin')
+                        }])
+
                 else:
                     self._alarm = await self.noonlight.client.create_alarm(
                         body={

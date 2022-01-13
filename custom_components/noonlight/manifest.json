@@ -1,6 +1,7 @@
 {
   "domain": "noonlight",
   "name": "Noonlight",
+  "version": "1.0.3",
   "documentation": "https://github.com/konnected-io/noonlight-hass",
   "requirements": [
     "noonlight==0.1.1"

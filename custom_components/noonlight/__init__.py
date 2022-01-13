@@ -36,6 +36,8 @@ CONF_STATE = 'state'
 CONF_ZIP = 'zip'
 CONF_NAME = 'name'
 CONF_PHONE = 'phone'
+CONF_NAME2 = 'name2'
+CONF_PHONE2 = 'phone2'
 CONF_INST = 'instructions'
 CONF_DEV_TOKEN = 'dev_token'
 
@@ -56,6 +58,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_PHONE): cv.string,
         vol.Optional(CONF_PIN): cv.string,
+        vol.Optional(CONF_NAME2): cv.string,
+        vol.Optional(CONF_PHONE2): cv.string,
         vol.Optional(CONF_INST): cv.string,
         vol.Optional(CONF_DEV_TOKEN): cv.string,
         vol.Inclusive(CONF_LATITUDE, 'coordinates',
