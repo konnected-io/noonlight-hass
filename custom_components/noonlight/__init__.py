@@ -252,23 +252,25 @@ class NoonlightIntegration():
                 services[alarm_type] = True
         if self._alarm is None:
             try:
-                alarm_body = {
-                    'location.coordinates': {
-                        'lat': self.latitude,
-                        'lng': self.longitude,
-                        'accuracy': 5
-                    }
-                }
-
                 if len(self.addline1) > 0:
-                    alarm_body['location.address'] = {
+                    alarm_body = {
+                        'location.address': {
                             'line1': self.addline1,
                             'city': self.addcity,
                             'state': self.addstate,
                             'zip': self.addzip
                         }
+                    }
                     if len(self.addline2) > 0:
                         alarm_body['location.address']['line2'] = self.addline2
+                else:
+                    alarm_body = {
+                        'location.coordinates': {
+                            'lat': self.latitude,
+                            'lng': self.longitude,
+                            'accuracy': 5
+                        }
+                    }
                 if len(services) > 0:
                     alarm_body['services'] = services
                 self._alarm = await self.client.create_alarm(
