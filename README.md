@@ -2,6 +2,8 @@
 
 This is the [Noonlight](https://noonlight.com) integration for HomeAssistant.
 
+This particular version is a fork of the official version on the [Konnected.io repository](https://github.com/konnected-io/noonlight-hass).  This adds address information using the v1 API.  There is another fork on [On3man's Github](https://github.com/0n3man/noonlight-hass) that already does this and more, but apparently uses the v2 API that may not be appropriate for this usage ([see this message in the pull request](https://github.com/konnected-io/noonlight-hass/pull/5#issuecomment-854991868)).  So far as I know, On3man's repository 
+
 [Noonlight](https://noonlight.com) connects your smart home to local emergency services to help keep you safe in case of a break-in, fire, or medical emergency.
 
 <p class='note info'>
@@ -51,6 +53,28 @@ noonlight:
 * `secret`: A secret key associated with your id
 * `api_endpoint`: The Noonlight API endpoint used when creating an alarm
 * `token_endpoint`: The OAuth endpoint used to refresh your Noonlight auth token (hosted by [Konnected](https://konnected.io))
+
+To use the address functionality, you need to add some additional items to the above entry.  If you don't populate these, the base lat/long-based functionality will still be used.
+
+```yaml
+# Example configuration.yaml entry
+noonlight:
+  id: NOONLIGHT_ID
+  secret: NOONLIGHT_SECRET
+  api_endpoint: https://api.noonlight.com/platform/v1
+  token_endpoint: https://noonlight.konnected.io/ha/token
+  line1: '123 Street Address'
+  line2: 'Apt X'
+  city: 'Anytown'
+  state: 'WA'
+  zip: '98100'
+```
+
+* `line1`: Street address
+* `line2`: Apartment, suite, etc. (optional)
+* `city`: City/town name
+* `state`: Two-letter state abbreviation
+* `zip`: Zip code
 
 ## Automation Examples
 

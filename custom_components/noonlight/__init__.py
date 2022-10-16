@@ -32,6 +32,11 @@ TOKEN_CHECK_INTERVAL = timedelta(minutes=15)
 CONF_SECRET = 'secret'
 CONF_API_ENDPOINT = 'api_endpoint'
 CONF_TOKEN_ENDPOINT = 'token_endpoint'
+CONF_LINE1 = 'line1'
+CONF_LINE2 = 'line2'
+CONF_CITY = 'city'
+CONF_STATE = 'state'
+CONF_ZIP = 'zip'
 
 CONST_ALARM_STATUS_ACTIVE = 'ACTIVE'
 CONST_ALARM_STATUS_CANCELED = 'CANCELED'
@@ -50,6 +55,11 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_SECRET): cv.string,
         vol.Required(CONF_API_ENDPOINT): cv.string,
         vol.Required(CONF_TOKEN_ENDPOINT): cv.string,
+        vol.Optional(CONF_LINE1): cv.string,
+        vol.Optional(CONF_LINE2): cv.string,
+        vol.Optional(CONF_CITY): cv.string,
+        vol.Optional(CONF_STATE): cv.string,
+        vol.Optional(CONF_ZIP): cv.string,
         vol.Inclusive(CONF_LATITUDE, 'coordinates',
                       'Include both latitude and longitude'): cv.latitude,
         vol.Inclusive(CONF_LONGITUDE, 'coordinates',
@@ -142,6 +152,13 @@ class NoonlightIntegration():
         self.client = nl.NoonlightClient(token=self.access_token,
                                          session=self._websession)
         self.client.set_base_url(self.config[CONF_API_ENDPOINT])
+        
+        #Add address portions, if exist
+        self.addline1 = self.config.get(CONF_LINE1,'')
+        self.addline2 = self.config.get(CONF_LINE2,'')
+        self.addcity = self.config.get(CONF_CITY,'')
+        self.addstate = self.config.get(CONF_STATE,'')
+        self.addzip = self.config.get(CONF_ZIP,'')
 
     @property
     def latitude(self):
@@ -242,6 +259,16 @@ class NoonlightIntegration():
                         'accuracy': 5
                     }
                 }
+
+                if len(self.addline1) > 0:
+                    alarm_body['location.address'] = {
+                            'line1': self.addline1,
+                            'city': self.addcity,
+                            'state': self.addstate,
+                            'zip': self.addzip
+                        }
+                    if len(self.addline2) > 0:
+                        alarm_body['location.address']['line2'] = self.addline2
                 if len(services) > 0:
                     alarm_body['services'] = services
                 self._alarm = await self.client.create_alarm(
