@@ -4,7 +4,7 @@ from noonlight import (
     NOONLIGHT_SERVICES_POLICE,
 )
 
-VERSION = "1.1.0"
+VERSION = "v1.1.3"
 DOMAIN = "noonlight"
 
 EVENT_NOONLIGHT_TOKEN_REFRESHED = "noonlight_token_refreshed"
