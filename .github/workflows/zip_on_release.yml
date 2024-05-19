@@ -12,11 +12,11 @@ jobs:
     - name: Update Version in Manifest
       if: ${{ github.event_name == 'release' }}
       run: |
-        sed -i 's/\"version\"\s*\:\s*\".*\"/\"version\"\:\"${{ github.ref_name }}\"/g' ./Snuffy2/noonlight-hass/manifest.json
+        sed -i 's/\"version\"\s*\:\s*\".*\"/\"version\"\:\"${{ github.ref_name }}\"/g' ./custom_components/noonlight/manifest.json
     - name: Update Version in const.py
       if: ${{ github.event_name == 'release' }}
       run: |
-        sed -i 's/VERSION \= \".*\"/VERSION \= \"${{ github.ref_name }}\"/' ./Snuffy2/noonlight-hass/const.py
+        sed -i 's/VERSION \= \".*\"/VERSION \= \"${{ github.ref_name }}\"/' ./custom_components/noonlight/const.py
     - name: Commit & Push Version Changes
       if: ${{ github.event_name == 'release' }}
       uses: actions-js/push@master
@@ -29,12 +29,12 @@ jobs:
       with:
         type: 'zip'
         filename: 'noonlight.zip'
-        directory: ./Snuffy2/noonlight-hass
+        directory: ./custom_components/noonlight
     - name: Upload Zip to Release
       if: ${{ github.event_name == 'release' }}
       uses: Roang-zero1/github-upload-release-artifacts-action@v3.0.0
       with:
-        args: ./Snuffy2/noonlight-hass/noonlight.zip
+        args: ./custom_components/noonlight/noonlight.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Add Zip to Action
@@ -42,5 +42,5 @@ jobs:
       uses: actions/upload-artifact@v4.3.3
       with:
         name: noonlight
-        path: ./Snuffy2/noonlight-hass/noonlight.zip
+        path: ./custom_components/noonlight/noonlight.zip
         if-no-files-found: error
