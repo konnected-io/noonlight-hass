@@ -1,14 +1,16 @@
-# Noonlight for HomeAssistant
+# Noonlight for HomeAssistant (Snuffy2)
 
-This is the [Noonlight](https://noonlight.com) integration for HomeAssistant.
-
-This particular version is a fork of the official version on the [Konnected.io repository](https://github.com/konnected-io/noonlight-hass).  This adds address information using the v1 API.  There is another fork on [On3man's Github](https://github.com/0n3man/noonlight-hass) that already does this and more, but apparently uses the v2 API that may not be appropriate for this usage ([see this message in the pull request](https://github.com/konnected-io/noonlight-hass/pull/5#issuecomment-854991868)).  So far as I know, On3man's repository works fine, this is just an attempt to make something that may be "more compliant".
+This is a fork of the [Noonlight](https://noonlight.com) integration for HomeAssistant. The official version is on the [Konnected.io repository](https://github.com/konnected-io/noonlight-hass).
 
 [Noonlight](https://noonlight.com) connects your smart home to local emergency services to help keep you safe in case of a break-in, fire, or medical emergency.
 
-<p class='note info'>
-Noonlight service is currently available in the United States.
-</p> 
+
+**Noonlight service is currently only available in the United States.**
+
+## Changes from Official Repository
+
+* Adds address information using the v1 API
+* Setup through Config Flow
 
 ## How it Works
 
@@ -29,7 +31,7 @@ Setup requires a U.S. based mobile phone number.
 1. Ensure that your [longitude and latitude coordinates](https://www.home-assistant.io/docs/configuration/basic/#latitude) are set accurately so that Noonlight knows where to send help.
 
 1. Click the link below to set up a Noonlight account and authorize Home Assistant to create alarms on your behalf:
-    
+
     [Connect to Noonlight](https://noonlight.konnected.io/ha/auth)
 
 3. Copy and paste the resulting YAML snippet into your configuration.yaml and restart Home Assistant
@@ -114,7 +116,7 @@ automation:
 
 <p class='note warning'>
 **Requires an Internet connection!** Home Assistant must have an active internet connection for this to work!
-</p> 
+</p>
 
 **NO GUARANTEE**
 
