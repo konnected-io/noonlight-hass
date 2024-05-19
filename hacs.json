@@ -1,7 +1,7 @@
 {
-    "name": "Noonlight - Alarm Monitoring",
+    "name": "Noonlight - Alarm Monitoring (Snuffy2)",
     "render_readme": true,
     "country": "US",
     "domains": ["switch"],
-    "homeassistant": "0.96"
+    "homeassistant": "2024.1.0b0"
 }
