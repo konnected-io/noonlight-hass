@@ -3,6 +3,7 @@
 import logging
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import Platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
@@ -10,6 +11,9 @@ from .const import (
     EVENT_NOONLIGHT_ALARM_CANCELED,
     EVENT_NOONLIGHT_ALARM_CREATED,
     EVENT_NOONLIGHT_TOKEN_REFRESHED,
+    NOONLIGHT_SERVICES_FIRE,
+    NOONLIGHT_SERVICES_MEDICAL,
+    NOONLIGHT_SERVICES_POLICE,
 )
 
 DEFAULT_NAME = "Noonlight Switch"
@@ -53,13 +57,12 @@ class NoonlightSwitch(SwitchEntity):
     def __init__(self, noonlight_integration):
         """Initialize the Noonlight switch."""
         self.noonlight = noonlight_integration
-        self._name = DEFAULT_NAME
+        self._alarm_type = NOONLIGHT_SERVICES_POLICE
+        self._attr_unique_id = f"{self._alarm_type.lower()}_{Platform.SWITCH}_{
+            self.noonlight.config.get('id', '')}"
+        self._attr_name = DEFAULT_NAME
+        self._attr_icon = "mdi:police-badge"
         self._state = False
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
 
     @property
     def available(self):

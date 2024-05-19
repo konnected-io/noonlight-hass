@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     EVENT_HOMEASSISTANT_START,
+    Platform,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -36,6 +37,7 @@ from .const import (
     CONST_ALARM_STATUS_ACTIVE,
     CONST_ALARM_STATUS_CANCELED,
     CONST_NOONLIGHT_HA_SERVICE_CREATE_ALARM,
+    CONST_NOONLIGHT_SERVICE_TYPES,
     DOMAIN,
     EVENT_NOONLIGHT_ALARM_CANCELED,
     EVENT_NOONLIGHT_ALARM_CREATED,
@@ -46,13 +48,6 @@ from .const import (
 )
 
 TOKEN_CHECK_INTERVAL = timedelta(minutes=15)
-
-CONST_NOONLIGHT_SERVICE_TYPES = (
-    nl.NOONLIGHT_SERVICES_POLICE,
-    nl.NOONLIGHT_SERVICES_FIRE,
-    nl.NOONLIGHT_SERVICES_MEDICAL,
-)
-
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
@@ -141,7 +136,9 @@ async def async_setup(hass, config):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, schedule_first_token_check)
 
-    hass.async_create_task(async_load_platform(hass, "switch", DOMAIN, {}, config))
+    hass.async_create_task(
+        async_load_platform(hass, Platform.SWITCH, DOMAIN, {}, config)
+    )
 
     return True
 
