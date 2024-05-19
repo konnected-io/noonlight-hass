@@ -7,7 +7,6 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 import noonlight as nl
 import voluptuous as vol
-from hass.helpers.dispatcher import async_dispatcher_send
 from homeassistant.components import persistent_notification
 from homeassistant.const import (
     CONF_ID,
@@ -19,6 +18,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_time_interval,

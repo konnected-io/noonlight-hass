@@ -65,15 +65,15 @@ noonlight:
   secret: NOONLIGHT_SECRET
   api_endpoint: https://api.noonlight.com/platform/v1
   token_endpoint: https://noonlight.konnected.io/ha/token
-  line1: '123 Street Address'
-  line2: 'Apt X'
+  address1: '123 Street Address'
+  address2: 'Apt X'
   city: 'Anytown'
   state: 'WA'
   zip: '98100'
 ```
 
-* `line1`: Street address
-* `line2`: Apartment, suite, etc. (optional)
+* `address1`: Street address
+* `address2`: Apartment, suite, etc. (optional)
 * `city`: City/town name
 * `state`: Two-letter state abbreviation
 * `zip`: Zip code
