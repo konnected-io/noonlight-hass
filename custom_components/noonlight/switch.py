@@ -2,7 +2,7 @@
 import logging
 
 from datetime import timedelta
-
+from hass.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components import persistent_notification
 try:
     from homeassistant.components.switch import SwitchEntity
@@ -28,23 +28,20 @@ async def async_setup_platform(
 
     def noonlight_token_refreshed():
         noonlight_switch.schedule_update_ha_state()
-    
+
     def noonlight_alarm_canceled():
         noonlight_switch._state = False
         noonlight_switch.schedule_update_ha_state()
-    
+
     def noonlight_alarm_created():
         noonlight_switch._state = True
         noonlight_switch.schedule_update_ha_state()
 
-    hass.helpers.dispatcher.async_dispatcher_connect(
-        EVENT_NOONLIGHT_TOKEN_REFRESHED, noonlight_token_refreshed)
+    async_dispatcher_connect(hass, EVENT_NOONLIGHT_TOKEN_REFRESHED, noonlight_token_refreshed)
 
-    hass.helpers.dispatcher.async_dispatcher_connect(
-        EVENT_NOONLIGHT_ALARM_CANCELED, noonlight_alarm_canceled)
+    async_dispatcher_connect(hass, EVENT_NOONLIGHT_ALARM_CANCELED, noonlight_alarm_canceled)
 
-    hass.helpers.dispatcher.async_dispatcher_connect(
-        EVENT_NOONLIGHT_ALARM_CREATED, noonlight_alarm_created)
+    async_dispatcher_connect(hass, EVENT_NOONLIGHT_ALARM_CREATED, noonlight_alarm_created)
 
 
 class NoonlightSwitch(SwitchEntity):

@@ -12,6 +12,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from hass.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time, async_track_time_interval)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -70,7 +71,7 @@ async def async_setup(hass, config):
         service = call.data.get('service', None)
         await noonlight_integration.create_alarm(alarm_types=[service])
 
-    hass.services.async_register(DOMAIN, 
+    hass.services.async_register(DOMAIN,
         CONST_NOONLIGHT_HA_SERVICE_CREATE_ALARM, handle_create_alarm_service)
 
     async def check_api_token(now):
@@ -203,8 +204,7 @@ class NoonlightIntegration():
                                   .format(self.access_token_expiry,
                                           self.access_token_expires_in
                                           .total_seconds()/3600.0))
-                    self.hass.helpers.dispatcher.async_dispatcher_send(
-                        EVENT_NOONLIGHT_TOKEN_REFRESHED)
+                    async_dispatcher_send(self.hass, EVENT_NOONLIGHT_TOKEN_REFRESHED)
                     return True
                 raise NoonlightException("unexpected token_response: {}"
                                          .format(token_response))
@@ -256,8 +256,7 @@ class NoonlightIntegration():
                     "Noonlight Alarm Failure",
                     NOTIFICATION_ALARM_CREATE_FAILURE)
             if self._alarm and self._alarm.status == CONST_ALARM_STATUS_ACTIVE:
-                self.hass.helpers.dispatcher.async_dispatcher_send(
-                    EVENT_NOONLIGHT_ALARM_CREATED)
+                async_dispatcher_send(self.hass, EVENT_NOONLIGHT_ALARM_CREATED)
                 _LOGGER.debug(
                     'noonlight alarm has been initiated. '
                     'id: %s status: %s',
@@ -278,8 +277,7 @@ class NoonlightIntegration():
                             if self._alarm.status == \
                                 CONST_ALARM_STATUS_CANCELED:
                                 self._alarm = None
-                        self.hass.helpers.dispatcher.async_dispatcher_send(
-                            EVENT_NOONLIGHT_ALARM_CANCELED)
+                        async_dispatcher_send(self.hass, EVENT_NOONLIGHT_ALARM_CANCELED)
                 cancel_interval = async_track_time_interval(
                     self.hass,
                     check_alarm_status_interval,
