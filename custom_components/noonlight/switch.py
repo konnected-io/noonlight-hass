@@ -1,26 +1,27 @@
 """Create a switch to trigger an alarm in Noonlight."""
+
 import logging
 
-from datetime import timedelta
+from hass.helpers.dispatcher import async_dispatcher_connect
 
-from homeassistant.components import persistent_notification
 try:
     from homeassistant.components.switch import SwitchEntity
 except ImportError:
     from homeassistant.components.switch import SwitchDevice as SwitchEntity
 
-from . import (DOMAIN, EVENT_NOONLIGHT_TOKEN_REFRESHED,
-               EVENT_NOONLIGHT_ALARM_CANCELED,
-               EVENT_NOONLIGHT_ALARM_CREATED,
-               NOTIFICATION_ALARM_CREATE_FAILURE)
+from . import (
+    DOMAIN,
+    EVENT_NOONLIGHT_ALARM_CANCELED,
+    EVENT_NOONLIGHT_ALARM_CREATED,
+    EVENT_NOONLIGHT_TOKEN_REFRESHED,
+)
 
-DEFAULT_NAME = 'Noonlight Switch'
+DEFAULT_NAME = "Noonlight Switch"
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Create a switch to create an alarm with the Noonlight service."""
     noonlight_integration = hass.data[DOMAIN]
     noonlight_switch = NoonlightSwitch(noonlight_integration)
@@ -28,23 +29,26 @@ async def async_setup_platform(
 
     def noonlight_token_refreshed():
         noonlight_switch.schedule_update_ha_state()
-    
+
     def noonlight_alarm_canceled():
         noonlight_switch._state = False
         noonlight_switch.schedule_update_ha_state()
-    
+
     def noonlight_alarm_created():
         noonlight_switch._state = True
         noonlight_switch.schedule_update_ha_state()
 
-    hass.helpers.dispatcher.async_dispatcher_connect(
-        EVENT_NOONLIGHT_TOKEN_REFRESHED, noonlight_token_refreshed)
+    async_dispatcher_connect(
+        hass, EVENT_NOONLIGHT_TOKEN_REFRESHED, noonlight_token_refreshed
+    )
 
-    hass.helpers.dispatcher.async_dispatcher_connect(
-        EVENT_NOONLIGHT_ALARM_CANCELED, noonlight_alarm_canceled)
+    async_dispatcher_connect(
+        hass, EVENT_NOONLIGHT_ALARM_CANCELED, noonlight_alarm_canceled
+    )
 
-    hass.helpers.dispatcher.async_dispatcher_connect(
-        EVENT_NOONLIGHT_ALARM_CREATED, noonlight_alarm_created)
+    async_dispatcher_connect(
+        hass, EVENT_NOONLIGHT_ALARM_CREATED, noonlight_alarm_created
+    )
 
 
 class NoonlightSwitch(SwitchEntity):
@@ -72,9 +76,9 @@ class NoonlightSwitch(SwitchEntity):
         attr = {}
         if self.noonlight._alarm is not None:
             alarm = self.noonlight._alarm
-            attr['alarm_status'] = alarm.status
-            attr['alarm_id'] = alarm.id
-            attr['alarm_services'] = alarm.services
+            attr["alarm_status"] = alarm.status
+            attr["alarm_id"] = alarm.id
+            attr["alarm_services"] = alarm.services
         return attr
 
     @property

@@ -1,16 +1,9 @@
 {
   "domain": "noonlight",
-  "name": "Noonlight",
-  "version": "1.0.2.1",
-  "documentation": "https://github.com/cfodder2000/noonlight-hass",
-  "requirements": [
-    "noonlight==0.1.1"
-  ],
-  "dependencies": [
-    "http"
-  ],
-  "codeowners": [
-    "@heythisisnate",
-	"@snicker"
-  ]
+  "name": "Noonlight (Snuffy2)",
+  "codeowners": ["@heythisisnate", "@snicker", "@Snuffy2"],
+  "dependencies": ["http", "switch"],
+  "documentation": "https://github.com/Snuffy2/noonlight-hass",
+  "requirements": ["noonlight>=0.1.1"],
+  "version": "1.1.0"
 }
