@@ -9,7 +9,7 @@ try:
 except ImportError:
     from homeassistant.components.switch import SwitchDevice as SwitchEntity
 
-from . import (
+from .const import (
     DOMAIN,
     EVENT_NOONLIGHT_ALARM_CANCELED,
     EVENT_NOONLIGHT_ALARM_CREATED,

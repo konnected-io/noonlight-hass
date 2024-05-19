@@ -24,30 +24,29 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
 )
 
-DOMAIN = "noonlight"
-
-EVENT_NOONLIGHT_TOKEN_REFRESHED = "noonlight_token_refreshed"
-EVENT_NOONLIGHT_ALARM_CANCELED = "noonlight_alarm_canceled"
-EVENT_NOONLIGHT_ALARM_CREATED = "noonlight_alarm_created"
-
-NOTIFICATION_TOKEN_UPDATE_FAILURE = "noonlight_token_update_failure"
-NOTIFICATION_TOKEN_UPDATE_SUCCESS = "noonlight_token_update_success"
-NOTIFICATION_ALARM_CREATE_FAILURE = "noonlight_alarm_create_failure"
+from .const import (
+    CONF_ADDRESS_LINE1,
+    CONF_ADDRESS_LINE2,
+    CONF_API_ENDPOINT,
+    CONF_CITY,
+    CONF_SECRET,
+    CONF_STATE,
+    CONF_TOKEN_ENDPOINT,
+    CONF_ZIP,
+    CONST_ALARM_STATUS_ACTIVE,
+    CONST_ALARM_STATUS_CANCELED,
+    CONST_NOONLIGHT_HA_SERVICE_CREATE_ALARM,
+    DOMAIN,
+    EVENT_NOONLIGHT_ALARM_CANCELED,
+    EVENT_NOONLIGHT_ALARM_CREATED,
+    EVENT_NOONLIGHT_TOKEN_REFRESHED,
+    NOTIFICATION_ALARM_CREATE_FAILURE,
+    NOTIFICATION_TOKEN_UPDATE_FAILURE,
+    NOTIFICATION_TOKEN_UPDATE_SUCCESS,
+)
 
 TOKEN_CHECK_INTERVAL = timedelta(minutes=15)
 
-CONF_SECRET = 'secret'
-CONF_API_ENDPOINT = 'api_endpoint'
-CONF_TOKEN_ENDPOINT = 'token_endpoint'
-CONF_LINE1 = 'line1'
-CONF_LINE2 = 'line2'
-CONF_CITY = 'city'
-CONF_STATE = 'state'
-CONF_ZIP = 'zip'
-
-CONST_ALARM_STATUS_ACTIVE = "ACTIVE"
-CONST_ALARM_STATUS_CANCELED = "CANCELED"
-CONST_NOONLIGHT_HA_SERVICE_CREATE_ALARM = "create_alarm"
 CONST_NOONLIGHT_SERVICE_TYPES = (
     nl.NOONLIGHT_SERVICES_POLICE,
     nl.NOONLIGHT_SERVICES_FIRE,
@@ -56,23 +55,30 @@ CONST_NOONLIGHT_SERVICE_TYPES = (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_ID): cv.string,
-        vol.Required(CONF_SECRET): cv.string,
-        vol.Required(CONF_API_ENDPOINT): cv.string,
-        vol.Required(CONF_TOKEN_ENDPOINT): cv.string,
-        vol.Optional(CONF_LINE1): cv.string,
-        vol.Optional(CONF_LINE2): cv.string,
-        vol.Optional(CONF_CITY): cv.string,
-        vol.Optional(CONF_STATE): cv.string,
-        vol.Optional(CONF_ZIP): cv.string,
-        vol.Inclusive(CONF_LATITUDE, 'coordinates',
-                      'Include both latitude and longitude'): cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, 'coordinates',
-                      'Include both latitude and longitude'): cv.longitude,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_ID): cv.string,
+                vol.Required(CONF_SECRET): cv.string,
+                vol.Required(CONF_API_ENDPOINT): cv.string,
+                vol.Required(CONF_TOKEN_ENDPOINT): cv.string,
+                vol.Optional(CONF_ADDRESS_LINE1): cv.string,
+                vol.Optional(CONF_ADDRESS_LINE2): cv.string,
+                vol.Optional(CONF_CITY): cv.string,
+                vol.Optional(CONF_STATE): cv.string,
+                vol.Optional(CONF_ZIP): cv.string,
+                vol.Inclusive(
+                    CONF_LATITUDE, "coordinates", "Include both latitude and longitude"
+                ): cv.latitude,
+                vol.Inclusive(
+                    CONF_LONGITUDE, "coordinates", "Include both latitude and longitude"
+                ): cv.longitude,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
@@ -161,13 +167,13 @@ class NoonlightIntegration:
             token=self.access_token, session=self._websession
         )
         self.client.set_base_url(self.config[CONF_API_ENDPOINT])
-        
-        #Add address portions, if exist
-        self.addline1 = self.config.get(CONF_LINE1,'')
-        self.addline2 = self.config.get(CONF_LINE2,'')
-        self.addcity = self.config.get(CONF_CITY,'')
-        self.addstate = self.config.get(CONF_STATE,'')
-        self.addzip = self.config.get(CONF_ZIP,'')
+
+        # Add address portions, if exist
+        self.addline1 = self.config.get(CONF_ADDRESS_LINE1, "")
+        self.addline2 = self.config.get(CONF_ADDRESS_LINE2, "")
+        self.addcity = self.config.get(CONF_CITY, "")
+        self.addstate = self.config.get(CONF_STATE, "")
+        self.addzip = self.config.get(CONF_ZIP, "")
 
     @property
     def latitude(self):
@@ -266,21 +272,21 @@ class NoonlightIntegration:
             try:
                 if len(self.addline1) > 0:
                     alarm_body = {
-                        'location.address': {
-                            'line1': self.addline1,
-                            'city': self.addcity,
-                            'state': self.addstate,
-                            'zip': self.addzip
+                        "location.address": {
+                            "line1": self.addline1,
+                            "city": self.addcity,
+                            "state": self.addstate,
+                            "zip": self.addzip,
                         }
                     }
                     if len(self.addline2) > 0:
-                        alarm_body['location.address']['line2'] = self.addline2
+                        alarm_body["location.address"]["line2"] = self.addline2
                 else:
                     alarm_body = {
-                        'location.coordinates': {
-                            'lat': self.latitude,
-                            'lng': self.longitude,
-                            'accuracy': 5
+                        "location.coordinates": {
+                            "lat": self.latitude,
+                            "lng": self.longitude,
+                            "accuracy": 5,
                         }
                     }
                 if len(services) > 0:
