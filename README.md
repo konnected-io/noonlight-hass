@@ -10,7 +10,7 @@ This is a fork of the [Noonlight](https://noonlight.com) integration for HomeAss
 ## Changes from Official Repository
 
 * Adds address information using the v1 API
-* Setup through Config Flow
+* Add unique id to Switch
 
 ## How it Works
 
