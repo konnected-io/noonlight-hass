@@ -1,0 +1,45 @@
+{
+  "title": "Noonlight Alarm",
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "step": {
+      "user": {
+        "title": "Configure the Noonlight Alarm",
+        "data": {
+          "name": "Name",
+          "id": "Noonlight ID",
+          "secret": "Noonlight Secret",
+          "api_endpoint": "Noonlight API Endpoint",
+          "token_endpoint": "Token Endpoint",
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "address1": "Address",
+          "address2": "Address 2",
+          "city": "City",
+          "state": "State",
+          "zip": "Zip"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure the Noonlight Alarm",
+        "data": {
+          "name": "Name",
+          "id": "Noonlight ID",
+          "secret": "Noonlight Secret",
+          "api_endpoint": "Noonlight API Endpoint",
+          "token_endpoint": "Token Endpoint",
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "address1": "Address",
+          "address2": "Address 2",
+          "city": "City",
+          "state": "State",
+          "zip": "Zip"
+        }
+      }
+    }
+  }
+}

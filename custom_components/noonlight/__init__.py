@@ -7,23 +7,26 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 import noonlight as nl
 import voluptuous as vol
+from homeassistant import config_entries
 from homeassistant.components import persistent_notification
-from homeassistant.const import (
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (  # Platform,
     CONF_ID,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     EVENT_HOMEASSISTANT_START,
-    Platform,
 )
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_time_interval,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_ADDRESS_LINE1,
@@ -45,7 +48,10 @@ from .const import (
     NOTIFICATION_ALARM_CREATE_FAILURE,
     NOTIFICATION_TOKEN_UPDATE_FAILURE,
     NOTIFICATION_TOKEN_UPDATE_SUCCESS,
+    PLATFORMS,
 )
+
+# from homeassistant.helpers.discovery import async_load_platform
 
 TOKEN_CHECK_INTERVAL = timedelta(minutes=15)
 _LOGGER = logging.getLogger(__name__)
@@ -76,11 +82,44 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
-    """Set up integration."""
-    conf = config[DOMAIN]
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up from YAML."""
+    if DOMAIN not in config:
+        return True
 
-    noonlight_integration = NoonlightIntegration(hass, conf)
+    _LOGGER.debug(f"[async_setup] config: {config[DOMAIN]}")
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2025.1",
+        is_fixable=False,
+        is_persistent=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Noonlight",
+        },
+    )
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=config[DOMAIN],
+        )
+    )
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up from a config entry."""
+
+    _LOGGER.debug(f"[init async_setup_entry] entry: {entry.data[DOMAIN]}")
+
+    noonlight_integration = NoonlightIntegration(hass, entry.data[DOMAIN])
     hass.data[DOMAIN] = noonlight_integration
 
     async def handle_create_alarm_service(call):
@@ -136,11 +175,18 @@ async def async_setup(hass, config):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, schedule_first_token_check)
 
-    hass.async_create_task(
-        async_load_platform(hass, Platform.SWITCH, DOMAIN, {}, config)
-    )
-
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    _LOGGER.info(f"Unloading: {entry.data}")
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data.pop(DOMAIN)
+
+    return unload_ok
 
 
 class NoonlightException(HomeAssistantError):

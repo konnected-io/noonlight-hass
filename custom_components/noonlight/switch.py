@@ -1,18 +1,22 @@
 """Create a switch to trigger an alarm in Noonlight."""
 
+# import hashlib
 import logging
 
+from homeassistant import config_entries
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import Platform
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_START, Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import (
+from .const import (  # NOONLIGHT_SERVICES_FIRE,; NOONLIGHT_SERVICES_MEDICAL,
     DOMAIN,
     EVENT_NOONLIGHT_ALARM_CANCELED,
     EVENT_NOONLIGHT_ALARM_CREATED,
     EVENT_NOONLIGHT_TOKEN_REFRESHED,
-    NOONLIGHT_SERVICES_FIRE,
-    NOONLIGHT_SERVICES_MEDICAL,
     NOONLIGHT_SERVICES_POLICE,
 )
 
@@ -20,9 +24,20 @@ DEFAULT_NAME = "Noonlight Switch"
 
 _LOGGER = logging.getLogger(__name__)
 
+# Temporary
+# CONF_YAML_HASH = "yaml_hash"
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Create a switch to create an alarm with the Noonlight service."""
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities,
+) -> None:
+    """Setup the sensor platform with a config_entry (config_flow)."""
+
+    _LOGGER.debug(f"[aync_setup_entry] noonlight_integration: {hass.data.get(DOMAIN)}")
+    _LOGGER.debug(f"[aync_setup_entry] config_entry: {config_entry}")
+
     noonlight_integration = hass.data[DOMAIN]
     noonlight_switch = NoonlightSwitch(noonlight_integration)
     async_add_entities([noonlight_switch])
