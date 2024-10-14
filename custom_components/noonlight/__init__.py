@@ -5,19 +5,13 @@ from datetime import timedelta
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-import noonlight as nl
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_ID,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    EVENT_HOMEASSISTANT_START,
-)
+from homeassistant.const import CONF_ID, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -27,6 +21,8 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
+
+import noonlight as nl
 
 from .const import (
     CONF_ADDRESS_LINE1,
@@ -166,12 +162,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     check_api_token.fail_count = 0
 
-    @callback
-    def schedule_first_token_check(event):
-        """Schedule the first token renewal when Home Assistant starts up."""
-        async_track_point_in_utc_time(hass, check_api_token, dt_util.utcnow())
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, schedule_first_token_check)
+    async_track_point_in_utc_time(hass, check_api_token, dt_util.utcnow())
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
