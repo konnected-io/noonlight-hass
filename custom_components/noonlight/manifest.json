@@ -1,16 +1,15 @@
 {
   "domain": "noonlight",
   "name": "Noonlight",
-  "version": "1.0.2",
+  "after_dependencies": [],
+  "codeowners": ["@heythisisnate", "@snicker", "@Snuffy2"],
+  "config_flow": true,
+  "dependencies": ["http", "switch"],
   "documentation": "https://github.com/konnected-io/noonlight-hass",
-  "requirements": [
-    "noonlight==0.1.1"
-  ],
-  "dependencies": [
-    "http"
-  ],
-  "codeowners": [
-    "@heythisisnate",
-	"@snicker"
-  ]
+  "integration_type": "device",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/konnected-io/noonlight-hass/issues",
+  "requirements": ["noonlight>=0.1.1"],
+  "single_config_entry": true,
+  "version":"v1.2.0"
 }

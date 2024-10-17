@@ -1,65 +1,74 @@
 """Create a switch to trigger an alarm in Noonlight."""
 import logging
 
-from datetime import timedelta
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from homeassistant.components import persistent_notification
-try:
-    from homeassistant.components.switch import SwitchEntity
-except ImportError:
-    from homeassistant.components.switch import SwitchDevice as SwitchEntity
+from .const import (  # NOONLIGHT_SERVICES_FIRE, NOONLIGHT_SERVICES_MEDICAL,
+    DOMAIN,
+    EVENT_NOONLIGHT_ALARM_CANCELED,
+    EVENT_NOONLIGHT_ALARM_CREATED,
+    EVENT_NOONLIGHT_TOKEN_REFRESHED,
+    NOONLIGHT_SERVICES_POLICE,
+)
 
-from . import (DOMAIN, EVENT_NOONLIGHT_TOKEN_REFRESHED,
-               EVENT_NOONLIGHT_ALARM_CANCELED,
-               EVENT_NOONLIGHT_ALARM_CREATED,
-               NOTIFICATION_ALARM_CREATE_FAILURE)
-
-DEFAULT_NAME = 'Noonlight Switch'
-
+DEFAULT_NAME = "Noonlight Switch"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
-    """Create a switch to create an alarm with the Noonlight service."""
-    noonlight_integration = hass.data[DOMAIN]
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities,
+) -> None:
+    """Setup the sensor platform with a config_entry (config_flow)."""
+
+    _LOGGER.debug(f"[aync_setup_entry] noonlight_integration: {hass.data.get(DOMAIN)}")
+    _LOGGER.debug(f"[aync_setup_entry] config_entry: {config_entry.data}")
+
+    noonlight_integration = hass.data.get(DOMAIN).get(config_entry.entry_id)
     noonlight_switch = NoonlightSwitch(noonlight_integration)
     async_add_entities([noonlight_switch])
 
     def noonlight_token_refreshed():
         noonlight_switch.schedule_update_ha_state()
-    
+
     def noonlight_alarm_canceled():
         noonlight_switch._state = False
         noonlight_switch.schedule_update_ha_state()
-    
+
     def noonlight_alarm_created():
         noonlight_switch._state = True
         noonlight_switch.schedule_update_ha_state()
 
-    hass.helpers.dispatcher.async_dispatcher_connect(
-        EVENT_NOONLIGHT_TOKEN_REFRESHED, noonlight_token_refreshed)
+    async_dispatcher_connect(
+        hass, EVENT_NOONLIGHT_TOKEN_REFRESHED, noonlight_token_refreshed
+    )
 
-    hass.helpers.dispatcher.async_dispatcher_connect(
-        EVENT_NOONLIGHT_ALARM_CANCELED, noonlight_alarm_canceled)
+    async_dispatcher_connect(
+        hass, EVENT_NOONLIGHT_ALARM_CANCELED, noonlight_alarm_canceled
+    )
 
-    hass.helpers.dispatcher.async_dispatcher_connect(
-        EVENT_NOONLIGHT_ALARM_CREATED, noonlight_alarm_created)
+    async_dispatcher_connect(
+        hass, EVENT_NOONLIGHT_ALARM_CREATED, noonlight_alarm_created
+    )
 
 
 class NoonlightSwitch(SwitchEntity):
-    """Representation of a Noonlight alarm switch."""
+    """Noonlight Alarm Switch."""
 
     def __init__(self, noonlight_integration):
         """Initialize the Noonlight switch."""
         self.noonlight = noonlight_integration
-        self._name = DEFAULT_NAME
+        self._alarm_type = NOONLIGHT_SERVICES_POLICE
+        self._attr_unique_id = f"{self._alarm_type.lower()}_{Platform.SWITCH}_{
+            self.noonlight.config.get('id', '')}"
+        self._attr_name = DEFAULT_NAME
+        self._attr_icon = "mdi:police-badge"
         self._state = False
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
 
     @property
     def available(self):
@@ -72,9 +81,9 @@ class NoonlightSwitch(SwitchEntity):
         attr = {}
         if self.noonlight._alarm is not None:
             alarm = self.noonlight._alarm
-            attr['alarm_status'] = alarm.status
-            attr['alarm_id'] = alarm.id
-            attr['alarm_services'] = alarm.services
+            attr["alarm_status"] = alarm.status
+            attr["alarm_id"] = alarm.id
+            attr["alarm_services"] = alarm.services
         return attr
 
     @property
