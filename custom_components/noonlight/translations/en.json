@@ -14,6 +14,7 @@
           "secret": "Noonlight Secret",
           "api_endpoint": "Noonlight API Endpoint",
           "token_endpoint": "Token Endpoint",
+          "country": "Country",
           "location_mode": "Location Mode"        }
       },
       "address": {
@@ -23,7 +24,8 @@
           "address2": "Address 2",
           "city": "City",
           "state": "State",
-          "zip": "Zip"
+          "zip": "Zip",
+          "country": "Country"
         }
       },
       "latlong": {
@@ -41,6 +43,7 @@
           "secret": "Noonlight Secret",
           "api_endpoint": "Noonlight API Endpoint",
           "token_endpoint": "Token Endpoint",
+          "country": "Country",
           "location_mode": "Location Mode"
         },
         "data_description": {
@@ -54,7 +57,8 @@
           "address2": "Address 2",
           "city": "City",
           "state": "State",
-          "zip": "Zip"
+          "zip": "Zip",
+          "country": "Country"
         }
       },
       "reconfig_latlong": {

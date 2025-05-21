@@ -4,11 +4,11 @@ This is the [Noonlight](https://noonlight.com) integration for HomeAssistant.
 
 [Noonlight](https://noonlight.com) connects your smart home to local emergency services to help keep you safe in case of a break-in, fire, or medical emergency.
 
-### Noonlight service is currently only available in the United States
+### Noonlight service is currently only available in the United States & Canada
 
 ## How it Works
 
-Noonlight connects to emergency 9-1-1 services in all 50 U.S. states. Backed by a UL-compliant alarm monitoring center and staffed 24/7 with live operators in the United States, Noonlight is standing by to send help to your home at a moment's notice.
+Noonlight connects to emergency 9-1-1 services in all U.S. states and Canadian provinces. Backed by a UL-compliant alarm monitoring center and staffed 24/7 with live operators in the United States, Noonlight is standing by to send help to your home at a moment's notice.
 
 When integrated with Home Assistant, a **Noonlight Alarm** switch will appear in your list of entities. When the Noonlight Alarm switch is turned _on_, this will send an emergency signal to Noonlight. You will be contacted by text and voice at the phone number associated with your Noonlight account. If you confirm the emergency with the Noonlight operator, or if you're unable to respond, Noonlight will dispatch local emergency services to your home using the [longitude and latitude coordinates](https://www.home-assistant.io/docs/configuration/basic/#latitude) specified in your Home Assistant configuration or an address you specify in the Noonlight configuration.
 
@@ -20,7 +20,7 @@ The _Noonlight Switch_ can be activated by any Home Assistant automation, just l
 
 ## Initial set up
 
-Setup requires a U.S. based mobile phone number.
+Setup requires a U.S. or Canada based mobile phone number.
 
 1. Ensure that your [longitude and latitude coordinates](https://www.home-assistant.io/docs/configuration/basic/#latitude) are set accurately so that Noonlight knows where to send help.
 
@@ -56,9 +56,9 @@ Setup requires a U.S. based mobile phone number.
 
 * `City`: City/town name
 
-* `State`: Two-letter state abbreviation
+* `State\Province`: Two-letter state or province abbreviation
 
-* `Zip`: Zip code
+* `Zip\Postal Code`: Zip code or Postal Code
 
 ## Automation Examples
 
