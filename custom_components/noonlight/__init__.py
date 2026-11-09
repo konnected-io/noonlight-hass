@@ -3,6 +3,7 @@
 import logging
 from datetime import timedelta
 
+import aiohttp
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 import voluptuous as vol
@@ -11,7 +12,7 @@ from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -49,6 +50,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 TOKEN_CHECK_INTERVAL = timedelta(minutes=15)
+TOKEN_RETRY_INTERVAL = timedelta(minutes=3)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -125,44 +127,72 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DOMAIN, CONST_NOONLIGHT_HA_SERVICE_CREATE_ALARM, handle_create_alarm_service
     )
 
+    cancel_token_check = None
+    unloaded = False
+
     async def check_api_token(now):
         """Check if the current API token has expired and renew if so."""
-        next_check_interval = TOKEN_CHECK_INTERVAL
+        nonlocal cancel_token_check
+        if unloaded:
+            return
 
-        result = await noonlight_integration.check_api_token()
+        # Default to the short retry interval so that, if anything below
+        # raises unexpectedly, we still reschedule and keep retrying.
+        next_check_interval = TOKEN_RETRY_INTERVAL
 
-        if not result:
-            _LOGGER.error("API token failed renewal, retrying in 3 min")
-            check_api_token.fail_count += 1
-            persistent_notification.create(
-                hass,
-                "Noonlight API token failed to renew {} time{}!\n"
-                "Home Assistant will automatically attempt to renew the "
-                "API token in 3 minutes.".format(
-                    check_api_token.fail_count,
-                    "s" if check_api_token.fail_count > 1 else "",
-                ),
-                "Noonlight Token Renewal Failure",
-                NOTIFICATION_TOKEN_UPDATE_FAILURE,
-            )
-            next_check_interval = timedelta(minutes=3)
-        else:
-            if check_api_token.fail_count > 0:
+        try:
+            result = await noonlight_integration.check_api_token()
+
+            if not result:
+                _LOGGER.error("API token failed renewal, retrying in 3 min")
+                check_api_token.fail_count += 1
                 persistent_notification.create(
                     hass,
-                    "Noonlight API token has now been " "renewed successfully.",
-                    "Noonlight Token Renewal Success",
-                    NOTIFICATION_TOKEN_UPDATE_SUCCESS,
+                    "Noonlight API token failed to renew {} time{}!\n"
+                    "Home Assistant will automatically attempt to renew the "
+                    "API token in 3 minutes.".format(
+                        check_api_token.fail_count,
+                        "s" if check_api_token.fail_count > 1 else "",
+                    ),
+                    "Noonlight Token Renewal Failure",
+                    NOTIFICATION_TOKEN_UPDATE_FAILURE,
                 )
-            check_api_token.fail_count = 0
+            else:
+                if check_api_token.fail_count > 0:
+                    persistent_notification.create(
+                        hass,
+                        "Noonlight API token has now been " "renewed successfully.",
+                        "Noonlight Token Renewal Success",
+                        NOTIFICATION_TOKEN_UPDATE_SUCCESS,
+                    )
+                check_api_token.fail_count = 0
+                next_check_interval = TOKEN_CHECK_INTERVAL
+        except Exception:
+            _LOGGER.exception(
+                "Unexpected error checking Noonlight API token, retrying in 3 min"
+            )
 
-        async_track_point_in_utc_time(
-            hass, check_api_token, dt_util.utcnow() + next_check_interval
-        )
+        # Always reschedule (unless unloaded), so one failure can never stop
+        # token renewal permanently.
+        if not unloaded:
+            cancel_token_check = async_track_point_in_utc_time(
+                hass, check_api_token, dt_util.utcnow() + next_check_interval
+            )
 
     check_api_token.fail_count = 0
 
-    async_track_point_in_utc_time(hass, check_api_token, dt_util.utcnow())
+    cancel_token_check = async_track_point_in_utc_time(
+        hass, check_api_token, dt_util.utcnow()
+    )
+
+    @callback
+    def _cancel_token_check():
+        nonlocal unloaded
+        unloaded = True
+        if cancel_token_check is not None:
+            cancel_token_check()
+
+    entry.async_on_unload(_cancel_token_check)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -275,7 +305,12 @@ class NoonlightIntegration:
                 raise NoonlightException(
                     "unexpected token_response: {}".format(token_response)
                 )
-            except NoonlightException:
+            except (
+                NoonlightException,
+                aiohttp.ClientError,
+                TimeoutError,
+                ValueError,
+            ):
                 _LOGGER.exception("Failed to renew Noonlight token")
                 return False
         return True
